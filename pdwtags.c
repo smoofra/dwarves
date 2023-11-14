@@ -7,7 +7,9 @@
 #include <argp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef  __linux__
 #include <malloc.h>
+#endif
 
 #include "dwarves.h"
 #include "dutil.h"

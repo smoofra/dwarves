@@ -7,7 +7,9 @@
 #include <fcntl.h>
 #include <gelf.h>
 #include <limits.h>
+#ifdef __linux__
 #include <malloc.h>
+#endif
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

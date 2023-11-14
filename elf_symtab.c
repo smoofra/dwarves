@@ -5,7 +5,10 @@
   Copyright (C) 2009 Arnaldo Carvalho de Melo <acme@redhat.com>
 */
 
+#ifdef __linux__
 #include <malloc.h>
+#endif
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 

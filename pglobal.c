@@ -5,7 +5,9 @@
  */
 
 #include <argp.h>
+#ifdef __linux__
 #include <malloc.h>
+#endif
 #include <search.h>
 #include <stdio.h>
 #include <stdlib.h>

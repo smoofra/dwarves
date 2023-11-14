@@ -11,7 +11,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stddef.h>
+#ifdef __linux__
 #include <malloc.h>
+#endif
 #include <string.h>
 #include <limits.h>
 #include <libgen.h>
