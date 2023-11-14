@@ -10,14 +10,24 @@
  */
 
 #include <stdbool.h>
+#ifdef __linux__
 #include <linux/stddef.h>
+#include <asm/bitsperlong.h>
+#endif
 #include <stddef.h>
 #include <string.h>
 #include <elf.h>
 #include <gelf.h>
-#include <asm/bitsperlong.h>
+
 #include "rbtree.h"
 #include "list.h"
+
+#ifdef __APPLE__
+# if defined(__arm64__)
+#  define __BITS_PER_LONG 64
+# endif
+# define __always_inline inline
+#endif
 
 #define BITS_PER_LONG __BITS_PER_LONG
 
@@ -40,6 +50,7 @@ static inline __attribute__((const)) bool is_power_of_2(unsigned long n)
         return (n != 0 && ((n & (n - 1)) == 0));
 }
 
+#if __linux__
 /**
  * fls - find last (most-significant) bit set
  * @x: the word to search
@@ -51,6 +62,7 @@ static __always_inline int fls(int x)
 {
 	return x ? sizeof(x) * 8 - __builtin_clz(x) : 0;
 }
+#endif
 
 /**
  * fls64 - find last set bit in a 64-bit word
@@ -63,7 +75,7 @@ static __always_inline int fls(int x)
  * set bit if value is nonzero. The last (most significant) bit is
  * at position 64.
  */
-#if BITS_PER_LONG == 32
+#if defined(__linux__) && BITS_PER_LONG == 32
 static __always_inline int fls64(uint64_t x)
 {
 	uint32_t h = x >> 32;
@@ -71,7 +83,7 @@ static __always_inline int fls64(uint64_t x)
 		return fls(h) + 32;
 	return fls(x);
 }
-#elif BITS_PER_LONG == 64
+#elif defined(__linux__) && BITS_PER_LONG == 64
 /**
  * __fls - find last (most-significant) set bit in a long word
  * @word: the word to search
@@ -114,6 +126,10 @@ static __always_inline int fls64(uint64_t x)
 	if (x == 0)
 		return 0;
 	return __fls(x) + 1;
+}
+#elif defined(__APPLE__)
+static inline int fls64(uint64_t x) {
+        return flsll(x);
 }
 #else
 #error BITS_PER_LONG not 32 or 64
