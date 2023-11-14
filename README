@@ -1,4 +1,10 @@
+
+This branch is port pahole to Mac OS
+
 Build instructions:
+
+[for the Mac OS port]
+0. ( cd gnulib && autoreconf -if && ./configure && make )
 
 1. install cmake
 2. mkdir build
