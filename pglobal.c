@@ -232,6 +232,8 @@ static void function_action__walk(const void *nodep, const VISIT which,
 	fputs("\n\n", stdout);
 }
 
+static void free_node(void *nodep) __attribute__((unused));
+
 static void free_node(void *nodep)
 {
 	void **node = nodep;
@@ -332,7 +334,11 @@ int main(int argc, char *argv[])
 		twalk(tree, function_action__walk);
 	}
 
+#ifdef __linux__
 	tdestroy(tree, free_node);
+#else
+        // leak it, YOLO
+#endif
 	rc = EXIT_SUCCESS;
 out_cus_delete:
 	cus__delete(cus);
