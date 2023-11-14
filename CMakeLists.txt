@@ -21,6 +21,10 @@ else()
 	LINK_DIRECTORIES(${LIBBPF_LIBRARY_DIRS})
 endif()
 
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/gnulib/lib)
+LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/gnulib/lib)
+
+
 # Try to parse this later, Helio just showed me a KDE4 example to support
 # x86-64 builds.
 # the following are directories where stuff will be installed to
@@ -46,7 +50,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 set(CMAKE_C_FLAGS_DEBUG "-Wall -Werror -ggdb -O0")
 set(CMAKE_C_FLAGS_RELEASE "-Wall -O2")
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -include ${CMAKE_CURRENT_SOURCE_DIR}/gnulib/config.h")
 
 if (NOT DEFINED BUILD_SHARED_LIBS)
 	set (BUILD_SHARED_LIBS ON)
@@ -123,7 +127,7 @@ endif()
 add_library(dwarves ${dwarves_LIB_SRCS})
 set_target_properties(dwarves PROPERTIES VERSION 1.0.0 SOVERSION 1)
 set_target_properties(dwarves PROPERTIES INTERFACE_LINK_LIBRARIES "")
-target_link_libraries(dwarves ${DWARF_LIBRARIES} ${ZLIB_LIBRARIES} ${LIBBPF_LIBRARIES} ${ARGP_LIBRARY} ${OBSTACK_LIBRARY})
+target_link_libraries(dwarves ${DWARF_LIBRARIES} ${ZLIB_LIBRARIES} ${LIBBPF_LIBRARIES} ${ARGP_LIBRARY} ${OBSTACK_LIBRARY} ${CMAKE_CURRENT_SOURCE_DIR}/gnulib/lib/libgnu.a)
 
 set(dwarves_emit_LIB_SRCS dwarves_emit.c)
 add_library(dwarves_emit ${dwarves_emit_LIB_SRCS})
