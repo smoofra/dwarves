@@ -19,8 +19,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef __linux__
 #include <bpf/btf.h>
 #include "bpf/libbpf.h"
+#endif
+
 
 #include "dwarves_reorganize.h"
 #include "dwarves.h"
@@ -29,7 +32,7 @@
 //#include "ctf_encoder.h" FIXME: disabled, probably its better to move to Oracle's libctf
 #include "btf_encoder.h"
 
-static struct btf_encoder *btf_encoder;
+static struct btf_encoder *btf_encoder __attribute__((unused));
 static char *detached_btf_filename;
 static bool btf_encode;
 static bool ctf_encode;
@@ -1178,12 +1181,14 @@ static void print_containers(struct cu *cu, uint32_t type, int ident)
 	}
 }
 
+#if __linux__
 static int
 libbpf_print_all_levels(__maybe_unused enum libbpf_print_level level,
 			const char *format, va_list args)
 {
 	return vfprintf(stderr, format, args);
 }
+#endif
 
 /* Name and version of program.  */
 ARGP_PROGRAM_VERSION_HOOK_DEF = dwarves_print_version;
@@ -1880,7 +1885,9 @@ static error_t pahole__options_parser(int key, char *arg,
 	case 't': separator = arg[0];			break;
 	case 'u': defined_in = 1;			break;
 	case 'V': global_verbose = 1;
+                  #ifdef __linux__
 		  libbpf_set_print(libbpf_print_all_levels);
+                  #endif
 		  break;
 	case 'w': word_size = atoi(arg);		break;
 	case 'X': cu__exclude_prefix = arg;
@@ -3157,6 +3164,9 @@ static int pahole_thread_exit(struct conf_load *conf, void *thr_data)
 static int pahole_threads_collect(struct conf_load *conf, int nr_threads, void **thr_data,
 				  int error)
 {
+#ifndef __linux__
+        return 0;
+#else
 	struct thread_data **threads = (struct thread_data **)thr_data;
 	int i;
 	int err = 0;
@@ -3187,6 +3197,7 @@ out:
 	free(threads[0]);
 
 	return err;
+#endif
 }
 
 static enum load_steal_kind pahole_stealer(struct cu *cu,
@@ -3208,6 +3219,7 @@ static enum load_steal_kind pahole_stealer(struct cu *cu,
 		cu__fprintf_ptr_table_stats_csv(cu, stderr);
 	}
 
+#ifdef __linux__
 	if (btf_encode) {
 		static pthread_mutex_t btf_lock = PTHREAD_MUTEX_INITIALIZER;
 		struct btf_encoder *encoder;
@@ -3272,6 +3284,8 @@ static enum load_steal_kind pahole_stealer(struct cu *cu,
 out_btf:
 		return ret;
 	}
+#endif // __linux__
+
 #if 0
 	if (ctf_encode) {
 		cu__encode_ctf(cu, global_verbose);
@@ -3616,6 +3630,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (base_btf_file) {
+#ifdef __linux__
 		conf_load.base_btf = btf__parse(base_btf_file, NULL);
 		if (libbpf_get_error(conf_load.base_btf)) {
 			fprintf(stderr, "Failed to parse base BTF '%s': %ld\n",
@@ -3626,6 +3641,11 @@ int main(int argc, char *argv[])
 			// Force "btf" since a btf_base is being informed
 			conf_load.format_path = "btf";
 		}
+#else
+
+                fprintf(stderr, "BTF not implemented on this platform\n");
+                goto out;
+#endif
 	}
 
 	struct cus *cus = cus__new();
@@ -3653,8 +3673,8 @@ try_sole_arg_as_class_names:
 		goto out_dwarves_exit;
 
 	if (base_btf_file == NULL) {
+#ifdef __linux__
 		const char *filename = argv[remaining];
-
 		if (filename &&
 		    strstarts(filename, "/sys/kernel/btf/") &&
 		    strstr(filename, "/vmlinux") == NULL) {
@@ -3666,6 +3686,7 @@ try_sole_arg_as_class_names:
 				goto out;
 			}
 		}
+#endif
 	}
 
 	err = cus__load_files(cus, &conf_load, argv + remaining);
@@ -3726,6 +3747,7 @@ try_sole_arg_as_class_names:
 	type_instance__delete(header);
 	header = NULL;
 
+#ifdef __linux__
 	if (btf_encode && btf_encoder) { // maybe all CUs were filtered out and thus we don't have an encoder?
 		err = btf_encoder__encode(btf_encoder);
 		if (err) {
@@ -3733,6 +3755,8 @@ try_sole_arg_as_class_names:
 			goto out_cus_delete;
 		}
 	}
+#endif
+
 out_ok:
 	if (stats_formatter != NULL)
 		print_stats();

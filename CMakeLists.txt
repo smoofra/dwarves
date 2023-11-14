@@ -109,21 +109,21 @@ endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64")
 
-if (NOT LIBBPF_FOUND)
-	file(GLOB libbpf_sources "lib/bpf/src/*.c")
-	add_library(bpf OBJECT ${libbpf_sources})
-	set_property(TARGET bpf PROPERTY POSITION_INDEPENDENT_CODE 1)
-	target_include_directories(bpf PRIVATE
-				   ${CMAKE_CURRENT_SOURCE_DIR}/lib/bpf/include
-				   ${CMAKE_CURRENT_SOURCE_DIR}/lib/bpf/include/uapi)
-endif()
+# if (NOT LIBBPF_FOUND)
+# 	file(GLOB libbpf_sources "lib/bpf/src/*.c")
+# 	add_library(bpf OBJECT ${libbpf_sources})
+# 	set_property(TARGET bpf PROPERTY POSITION_INDEPENDENT_CODE 1)
+# 	target_include_directories(bpf PRIVATE
+# 				   ${CMAKE_CURRENT_SOURCE_DIR}/lib/bpf/include
+# 				   ${CMAKE_CURRENT_SOURCE_DIR}/lib/bpf/include/uapi)
+# endif()
 
 set(dwarves_LIB_SRCS dwarves.c dwarves_fprintf.c gobuffer.c
-		     ctf_loader.c libctf.c btf_encoder.c btf_loader.c
+		     ctf_loader.c libctf.c
 		     dwarf_loader.c dutil.c elf_symtab.c rbtree.c)
-if (NOT LIBBPF_FOUND)
-	list(APPEND dwarves_LIB_SRCS $<TARGET_OBJECTS:bpf>)
-endif()
+# if (NOT LIBBPF_FOUND)
+# 	list(APPEND dwarves_LIB_SRCS $<TARGET_OBJECTS:bpf>)
+# endif()
 add_library(dwarves ${dwarves_LIB_SRCS})
 set_target_properties(dwarves PROPERTIES VERSION 1.0.0 SOVERSION 1)
 set_target_properties(dwarves PROPERTIES INTERFACE_LINK_LIBRARIES "")

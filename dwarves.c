@@ -2005,14 +2005,20 @@ out:
 	return err;
 }
 
+#ifdef __linux__
 /*
  * This should really do demand loading of DSOs, STABS anyone? 8-)
  */
-extern struct debug_fmt_ops dwarf__ops, ctf__ops, btf__ops;
+extern struct debug_fmt_ops btf__ops;
+#endif
+
+extern struct debug_fmt_ops dwarf__ops, ctf__ops;
 
 static struct debug_fmt_ops *debug_fmt_table[] = {
 	&dwarf__ops,
+#ifdef __linux__
 	&btf__ops,
+#endif
 	&ctf__ops,
 	NULL,
 };
